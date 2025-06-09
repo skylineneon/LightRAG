@@ -228,14 +228,16 @@ async def insert_multi_txt(rag: LightRAG):
     from pathlib import Path
     files_path = Path(os.getenv("MULTI_FILE_PATH"))
     contents=[]
+    path=[]
     if not files_path.exists():
         print(f"File not found: {files_path}")
         return 
     for file_path in files_path.glob("*.txt"):
         with open(file_path, "r", encoding="utf-8") as file:
-            content = file.read()    
+            content = file.read()
+        path.append(file_path)   
         contents.append(content)
-    await rag.ainsert(contents)
+    await rag.ainsert(contents,file_paths=path)
     print("批量文件构建索引完成")
 async def insert_singer_txt(rag: LightRAG):
     file_path =os.getenv("SINGER_FILE_PATH")

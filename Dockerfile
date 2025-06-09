@@ -1,5 +1,5 @@
 # Build stage
-FROM swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/python:3.10-slim AS builder
+FROM python:3.11-slim AS builder
 
 WORKDIR /app
 
@@ -18,13 +18,18 @@ COPY lightrag/api/requirements.txt ./lightrag/api/
 
 # Install dependencies
 ENV PATH="/root/.cargo/bin:${PATH}"
-# 设置 pip 镜像源为清华源
-ENV PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple
 RUN pip install --user --no-cache-dir -r requirements.txt
 RUN pip install --user --no-cache-dir -r lightrag/api/requirements.txt
 
+# Install depndencies for default storage
+RUN pip install --user --no-cache-dir nano-vectordb networkx
+# Install depndencies for default LLM
+RUN pip install --user --no-cache-dir openai ollama tiktoken
+# Install depndencies for default document loader
+RUN pip install --user --no-cache-dir pypdf2 python-docx python-pptx openpyxl
+
 # Final stage
-FROM swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/python:3.10-slim
+FROM python:3.11-slim
 
 WORKDIR /app
 
@@ -33,7 +38,7 @@ COPY --from=builder /root/.local /root/.local
 COPY ./lightrag ./lightrag
 COPY setup.py .
 
-RUN pip install .
+RUN pip install ".[api]"
 # Make sure scripts in .local are usable
 ENV PATH=/root/.local/bin:$PATH
 
